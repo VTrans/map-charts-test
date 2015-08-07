@@ -5,10 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Bootstrap 101 Template</title>
+    <title>Esri Cedar Charts Test</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -16,12 +17,82 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+
+    <!-- Cedar -->
+    <script type="text/javascript" src="http://esri.github.io/cedar/js/d3.min.js"></script>
+    <script type="text/javascript" src="http://esri.github.io/cedar/js/vega.js"></script>
+    <script type="text/javascript" src="http://esri.github.io/cedar/js/cedar.js"></script>
+
+
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <style>
+      #resizable { width: 750px; height: 550px; padding: 0.5em; }
+    </style>
+
+    <script>
+    $(function () {
+
+    var chart = new Cedar({"type": "bar"});
+
+    var dataset = {
+      "url":"http://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/CrossingInspections2015/FeatureServer/1",
+      "query": {
+        "where": "XingCond in ('Good','Fair','Poor','Excellent')",
+        "groupByFieldsForStatistics": "XingCond",
+        "outStatistics": [{
+          "statisticType": "count",
+          "onStatisticField": "XingCond",
+          "outStatisticFieldName": "XingCond_CT"
+        }]
+      },
+      "mappings":{
+        "sort": "Excellent" "Good" "Fair" "Poor",
+        "x": {"field":"XingCond","label":"Surface Condition"},
+        "y": {"field":"XingCond_CT","label":"Count"}
+      }
+    };
+
+    chart.tooltip = {
+      "title": "{XingCond}",
+      "content": "{XingCond_CT} Crossings"
+    }
+
+    chart.dataset = dataset;
+
+    chart.show({
+      elementId: "#chart",
+      autolabels: true,
+      renderer: "svg"
+    });
+
+    });
+    </script>
+
   </head>
   <body>
-    <h1>Hello, world!</h1>
+    <header>
+      <h1>Header text</h1>
+      <h2><i>Header subtext</i></h2>
+      <p>
+        Some header paragraph text
+      </p>
+      <button type="button" name="button">This is a button</button>
+    </header>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12">
+          <h1>Hello, world!</h1>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+          <div class="resizable" id="chart"></div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins)
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
   </body>
