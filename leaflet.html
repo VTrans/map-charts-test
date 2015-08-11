@@ -17,6 +17,7 @@
     /*Labeling Styles*/
     .label {
       font-weight: 900;
+      font-size: 1.2em;
       text-transform: uppercase;
       text-align: center;
       margin-top: -1em;
@@ -25,6 +26,7 @@
       position: relative;
       left: -50%;
       text-shadow: 0px 2px 1px rgba(255,255,255,0.85);
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -37,7 +39,9 @@
 <div id="map"></div>
 <!-- TODO:
   *Add layer toggle list
-  *Include VAL sheet oulines and make sheets searchable
+  ~*Include VAL sheet oulines~
+  ~*Label VAL outlines~
+  *Search sheet names
   *Disclaimer popup
   *Print dialog
 -->
@@ -105,60 +109,81 @@
 
 //label val index polys
 
-var labels = {};
+  var labels = {};
 
-VAL.on('createfeature',function(e){
-  var id = e.feature.id;
-  var feature = VAL.getFeature(id);
-  var center = feature.getBounds().getCenter();
-  var label = L.marker(center, {
-    icon: L.divIcon ({
-      iconSize: null,
-      className: 'label',
-      html: '<div>' + e.feature.properties.Val_Sheet + '</div>'
-    })
-  }).addTo(map);
-  labels[id] = label;
-})
+  VAL.on('createfeature',function(e){
+    var id = e.feature.id;
+    var feature = VAL.getFeature(id);
+    var center = feature.getBounds().getCenter();
+    var label = L.marker(center, {
+      icon: L.divIcon ({
+        iconSize: null,
+        className: 'label',
+        html: '<div>' + e.feature.properties.Val_Sheet + '</div>'
+      })
+    }).addTo(map);
+    labels[id] = label;
+  });
 
-VAL.on('addfeature', function(e){
-  var label = labels[e.feature.id];
-  if(label){
-    label.addTo(map);
+map.on('zoomend',function(e){
+  if (e.target.getZoom() < 12) {
+    //remove labels
+    for(var index in labels) {
+      if(labels.hasOwnProperty(index)) {
+        if(map.hasLayer(labels[index])) {
+          map.removeLayer(labels[index]);
+        }
+      }
+    }
+  } else {
+    //add labels
+    for(var index in labels) {
+      if(labels.hasOwnProperty(index)) {
+        if(!map.hasLayer(labels[index])) {
+          map.addLayer(labels[index]);
+        }
+      }
+    }
   }
 });
 
-VAL.on ('removefeature', function(e){
-  var label = labels[e.feature.id];
-  if(label){
-    map.removeLayer(label);
-  }
-});
+  // VAL.on('addfeature', function(e){
+  //   var label = labels[e.feature.id];
+  //   if(label){
+  //     label.addTo(map);
+  //   }
+  // });
+  //
+  // VAL.on ('removefeature', function(e){
+  //   var label = labels[e.feature.id];
+  //   if(label){
+  //     map.removeLayer(label);
+  //   }
+  // });
 
 //Try to get a click-to-zoom function
   function clickFeature(e) {
     var layer = e.target;
     map.fitBounds(layer.getBounds());}
 
-//Search box
-  var searchControl = L.esri.Geocoding.Controls.geosearch(
-    {useMapBounds:[false]}).addTo(map);
-
-  var results = L.layerGroup().addTo(map);
-
-  // var searchControl = L.esri.Geocoding.Controls.geosearch({
-  //   providers: [
-  //     new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer({
+//ORIGINAL WORKING Search box
+  // var searchControl = L.esri.Geocoding.Controls.geosearch(
+  //   {useMapBounds:[false]}).addTo(map);
   //
-  //     })
-  //     new searchControl.on('results', function(data){
-  //       results.clearLayers();
-  //       for (var i = data.results.length - 1; i >= 0; i--) {
-  //         results.addLayer(L.marker(data.results[i].latlng));
-  //       }
-  //     })
-  //   ]
-  // })
+   var results = L.layerGroup().addTo(map);
+
+// New multi-search box
+
+  var searchControl = L.esri.Geocoding.Controls.geosearch ({
+    providers: [
+      new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer({
+        url: '//services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/VAL_Index/FeatureServer/0',
+        searchFields: ['Val_Sheet'],
+        label: 'VAL Sheet name (ex: V2-57)',
+        bufferRadius: 50000
+      })
+    ]
+  }).addTo(map);
 
   searchControl.on('results', function(data){
     results.clearLayers();
