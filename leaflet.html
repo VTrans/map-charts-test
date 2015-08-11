@@ -14,6 +14,18 @@
   <style>
     body { margin:0; padding:0; }
     #map { position: absolute; top:0; bottom:0; right:0; left:0; }
+    /*Labeling Styles*/
+    .label {
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: -1em;
+    }
+    .label div {
+      position: relative;
+      left: -50%;
+      text-shadow: 0px 2px 1px rgba(255,255,255,0.85);
+    }
   </style>
 </head>
 <body>
@@ -23,12 +35,18 @@
 
 
 <div id="map"></div>
-
+<!-- TODO:
+  *Add layer toggle list
+  *Include VAL sheet oulines and make sheets searchable
+  *Disclaimer popup
+  *Print dialog
+-->
 <script>
-  var map = L.map('map').setView([ 43.605804, -72.984034], 16);
+  var map = L.map('map').setView([ 43.605804, -72.984034], 12);
 
   L.esri.basemapLayer('Imagery').addTo(map);
 
+//map layers
   L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/VTR/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
@@ -71,9 +89,76 @@
         bounds: [L.latLngBounds(L.latLng(45.02,-72.28),L.latLng(44.94,-72.09))]
       }).addTo(map);
 
-  var searchControl = L.esri.Geocoding.Controls.geosearch({useMapBounds:[false]}).addTo(map);
+  var VAL = L.esri.featureLayer({
+    url: 'http://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/VAL_Index/FeatureServer/0',
+    minZoom: 0, maxZoom: 14,
+    style: function() {
+      return {
+        color: 'yellow',
+        weight: 2,
+        opacity: .75,
+        fillOpacity: 0,
+        clickable: false
+      };
+    }
+  }).addTo(map);
+
+//label val index polys
+
+var labels = {};
+
+VAL.on('createfeature',function(e){
+  var id = e.feature.id;
+  var feature = VAL.getFeature(id);
+  var center = feature.getBounds().getCenter();
+  var label = L.marker(center, {
+    icon: L.divIcon ({
+      iconSize: null,
+      className: 'label',
+      html: '<div>' + e.feature.properties.Val_Sheet + '</div>'
+    })
+  }).addTo(map);
+  labels[id] = label;
+})
+
+VAL.on('addfeature', function(e){
+  var label = labels[e.feature.id];
+  if(label){
+    label.addTo(map);
+  }
+});
+
+VAL.on ('removefeature', function(e){
+  var label = labels[e.feature.id];
+  if(label){
+    map.removeLayer(label);
+  }
+});
+
+//Try to get a click-to-zoom function
+  function clickFeature(e) {
+    var layer = e.target;
+    map.fitBounds(layer.getBounds());}
+
+//Search box
+  var searchControl = L.esri.Geocoding.Controls.geosearch(
+    {useMapBounds:[false]}).addTo(map);
 
   var results = L.layerGroup().addTo(map);
+
+  // var searchControl = L.esri.Geocoding.Controls.geosearch({
+  //   providers: [
+  //     new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer({
+  //
+  //     })
+  //     new searchControl.on('results', function(data){
+  //       results.clearLayers();
+  //       for (var i = data.results.length - 1; i >= 0; i--) {
+  //         results.addLayer(L.marker(data.results[i].latlng));
+  //       }
+  //     })
+  //   ]
+  // })
 
   searchControl.on('results', function(data){
     results.clearLayers();
