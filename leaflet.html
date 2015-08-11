@@ -41,7 +41,7 @@
   *Add layer toggle list
   ~*Include VAL sheet oulines~
   ~*Label VAL outlines~
-  *Search sheet names
+  ~*Search sheet names~
   *Disclaimer popup
   *Print dialog
 -->
@@ -51,47 +51,55 @@
   L.esri.basemapLayer('Imagery').addTo(map);
 
 //map layers
-  L.tileLayer(
+  var VTR = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/VTR/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(44.57,-73.31),L.latLng(42.85,-72.94))]
       }).addTo(map);
 
-  L.tileLayer(
+  var GMRC = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/GMRC_Valuation_Sheets/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(43.13,-72.99),L.latLng(43.61,-72.44))]
       }).addTo(map);
 
-  L.tileLayer(
+  var CRL = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/CRL/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(44.98,-72.34),L.latLng(43.58,-71.94))]
       }).addTo(map);
 
-  L.tileLayer(
+  var LVRT = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/LVRT/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(44.98,-73.23),L.latLng(44.37,-71.94))]
       }).addTo(map);
 
-  L.tileLayer(
+  var MVRT = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/MVRT/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(45,-73.12),L.latLng(44.8,-72.63))]
       }).addTo(map);
 
-  L.tileLayer(
+  var DHRT = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/DHRT/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(43.64,-73.3),L.latLng(43.18,-73.13))]
       }).addTo(map);
 
-  L.tileLayer(
+  var BBRT = L.tileLayer(
       "http://tiles{s}.arcgis.com/tiles/NXmBVyW5TaiCXqFs/arcgis/rest/services/BBRT_VAL/MapServer/tile/{z}/{y}/{x}",
       { minZoom: 15,maxZoom: 19,subdomains: [1,2,3,4],attribution: 'VTrans Rail',
         bounds: [L.latLngBounds(L.latLng(45.02,-72.28),L.latLng(44.94,-72.09))]
       }).addTo(map);
+
+  var VALS = L.layerGroup([VTR,GMRC,CRL,LVRT,MVRT,DHRT,BBRT]);
+
+  var overlayMaps = {
+    "Valuation Sheets": VALS // TODO: WIP - setting up layer group toggles
+  };
+
+  L.control.layers(overlayMaps).addTo(map);
 
   var VAL = L.esri.featureLayer({
     url: 'http://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/VAL_Index/FeatureServer/0',
@@ -175,6 +183,7 @@ map.on('zoomend',function(e){
 // New multi-search box
 
   var searchControl = L.esri.Geocoding.Controls.geosearch ({
+    useMapBounds: [false],
     providers: [
       new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer({
         url: '//services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/VAL_Index/FeatureServer/0',
